@@ -99,7 +99,7 @@ var Tiling = (function () {
                 ctx.moveTo(t[1].x, t[1].y);
                 ctx.lineTo(t[2].x, t[2].y);
                 ctx.lineTo(t[3].x, t[3].y);
-                //ctx.fill();
+                ctx.fill();
                 ctx.closePath();
                 ctx.stroke();
             }
@@ -113,7 +113,7 @@ var Tiling = (function () {
                 ctx.moveTo(t[1].x, t[1].y);
                 ctx.lineTo(t[2].x, t[2].y);
                 ctx.lineTo(t[3].x, t[3].y);
-                //ctx.fill();
+                ctx.fill();
                 ctx.closePath();
                 ctx.stroke();
             }
@@ -144,6 +144,6 @@ var canvas = new Canvas(1070, 615, 'png');
 var imageSize = {x:canvas.width, y:canvas.height};
 var ctx = canvas.getContext('2d');
 var tiles = Tiling.generate({depth: depth});
-Tiling.draw(ctx, imageSize, tiles, drawStyle2);
+Tiling.draw(ctx, imageSize, tiles, drawStyle);
 fs.writeFileSync('penrose1.png', canvas.toBuffer());
  
