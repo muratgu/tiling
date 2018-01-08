@@ -1,4 +1,4 @@
-var Canvas = require('canvas')
+var Canvas = require('canvas-prebuilt')
   , fs = require('fs');
 
 /*
@@ -81,6 +81,16 @@ var Tiling = (function () {
         return triangles;
     }
     
+    var drawTriangle = function(ctx, t) {
+        ctx.beginPath();
+        ctx.moveTo(t[1].x, t[1].y);
+        ctx.lineTo(t[2].x, t[2].y);
+        ctx.lineTo(t[3].x, t[3].y);
+        //ctx.fill();
+        ctx.closePath();
+        ctx.stroke();
+    }
+
     var draw = function (ctx, size, triangles, drawStyle) {
         // fit drawing into canvas        
         var factorx = imageSize.x / 2.0;
@@ -95,13 +105,7 @@ var Tiling = (function () {
         for (var i=0; i<triangles.length; i++) {
             var t = triangles[i];
             if (t[0] == 0) {
-                ctx.beginPath();
-                ctx.moveTo(t[1].x, t[1].y);
-                ctx.lineTo(t[2].x, t[2].y);
-                ctx.lineTo(t[3].x, t[3].y);
-                ctx.fill();
-                ctx.closePath();
-                ctx.stroke();
+                drawTriangle(ctx, t);
             }
         }      
         ctx.strokeStyle = drawStyle.lineStyle;
@@ -109,13 +113,7 @@ var Tiling = (function () {
         for (var i=0; i<triangles.length; i++) {
             var t = triangles[i];
             if (t[0] === 1) {
-                ctx.beginPath();
-                ctx.moveTo(t[1].x, t[1].y);
-                ctx.lineTo(t[2].x, t[2].y);
-                ctx.lineTo(t[3].x, t[3].y);
-                ctx.fill();
-                ctx.closePath();
-                ctx.stroke();
+                drawTriangle(ctx, t);
             }
         }
     }
@@ -128,7 +126,7 @@ var Tiling = (function () {
 })();
 var drawStyle = {
     'lineWidth' : 0.001,
-    'lineStyle' : 'rgba(250,250,200,0.5)',
+    'lineStyle' : 'rgba(0,0,0,0.5)',
     'fillStyleA': 'rgba(150,0,0,0.5)',
     'fillStyleB': 'rgba(0,0,150,0.5)',
 }
@@ -139,7 +137,7 @@ var drawStyle2 = {
     'fillStyleA': 'rgba(0,0,0,0.5)',
     'fillStyleB': 'rgba(0,0,0,0.5)',
 }
-var depth = 6;
+var depth = 8;
 var canvas = new Canvas(1070, 615, 'png');
 var imageSize = {x:canvas.width, y:canvas.height};
 var ctx = canvas.getContext('2d');

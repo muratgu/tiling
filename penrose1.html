@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="paper.js"></script>
+<script type="text/javascript">
+    /*
+    Reference: http://preshing.com/20110831/penrose-tiling-explained/
+    */
+    var Tiling = (function () {
+        
+        var Vector = function(x, y){
+            this.x = x;
+            this.y = y;
+        }
+        var vadd = function (a, b){
+            return new Vector(a.x+b.x, a.y+b.y);
+        }
+        var vsub = function (a, b){
+            return new Vector(a.x-b.x, a.y-b.y);
+        }    
+        var vdiv = function (a, k){
+            return new Vector(a.x/k, a.y/k);
+        }
+
+        var subdivide = function (triangles, depth) {
+            var GOLDENRATIO = (1.0 + Math.sqrt(5)) / 2.0;
+            var result = [];
+            for (var i = 0; i < triangles.length; i++) {        
+                var t = triangles[i];
+                var color = t[0], A = t[1], B = t[2], C = t[3]
+                // color0, A1, B2, C3 
+                if (color === 0) {
+                    // Subdivide red triangle
+                    var P = vadd(A, vdiv(vsub(B, A), GOLDENRATIO));
+                    result.push([0, C, P, B, 0], [1, P, C, A, 1]);
+                } else {
+                    // Subdivide blue triangle
+                    var Q = vadd(B, vdiv(vsub(A, B), GOLDENRATIO));
+                    var R = vadd(B, vdiv(vsub(C, B), GOLDENRATIO));
+                    result.push([1, R, C, A, 2], [1, Q, R, B, 3], [0, R, Q, A, 4]);
+                }
+            }
+            return result;
+        } 
+
+        var generateSeedSun = function(options){
+            options = options || {};
+            // Create wheel of red triangles around the origin
+            var triangles = []
+            for (var i = 0; i < 10; i++) {
+                var A = new Vector(0, 0);
+                var phi1 = (2.0*i - 1) * Math.PI / 10.0;
+                var B = new Vector(Math.cos(phi1), Math.sin(phi1));
+                phi2 = (2.0*i + 1) * Math.PI / 10.0;
+                var C = new Vector(Math.cos(phi2), Math.sin(phi2));
+                if (i % 2 === 0) {
+                    var temp = B;
+                    B = C;
+                    C = temp;
+                }
+                triangles.push([0, A, B, C]);
+            }
+            return triangles;
+        }
+        
+        var generate = function(options) {
+            options = options || {};
+            depth = options.depth || 8;
+            // Create a seed
+            var triangles = generateSeedSun();
+            // Perform subdivisions
+            var numSubdivisions = depth;
+            for (var i = 0; i < numSubdivisions; i++) {
+                triangles = subdivide(triangles, i);        
+            }
+            return triangles;
+        }      
+        
+
+      return {
+        generate: generate
+      };
+
+    })();
+
+</script>
+
+<script type="text/paperscript" canvas="myCanvas">
+
+    function shuffle(arr) {
+        var j, x, i;
+        var len = arr.length;
+        for (i = len - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            x = arr[i];
+            arr[i] = arr[j];
+            arr[j] = x;
+        }
+    }
+
+    function getRandomColor() {
+        var r = Math.floor(Math.random()*255);
+        var g = Math.floor(Math.random()*255);
+        var b = Math.floor(Math.random()*255);
+        return 'rgba('+r+','+g+','+b+',0.7)';
+    }
+
+    function getRandomColors() {
+        var colors = [];
+        var len = Math.floor(Math.random()*4) + 2; // 2 to 5 colors is ideal
+        for (var i=0; i<len; i++) {
+            colors.push(getRandomColor());
+        }
+        console.log(colors);
+        return colors;
+    }    
+
+    var makeTriangle = function(t) {
+        var path = new Path();
+        path.moveTo(t[1].x, t[1].y);
+        path.lineTo(t[2].x, t[2].y);
+        path.lineTo(t[3].x, t[3].y);
+        path.closePath();
+        //path.strokeColor = 'rgba(0,0,0,0.0)';
+        //path.lineWidth = 0; 
+        //path.lineJoin = 'round';
+        return path;
+    }
+
+    var paths = [];
+    var draw = function (triangles) {
+        var fillColors = getRandomColors();
+        var group = new Group();
+        paths = [];
+        for (var i=0; i<triangles.length; i++) {
+            var t = triangles[i];
+            var p = makeTriangle(t);
+            p.t4 = t[4];
+            p.fillColor = fillColors[p.t4 % fillColors.length];
+            paths.push(p);
+            group.addChild(p);
+        }      
+        return group;
+    }
+
+    var delta = 0;
+    function onFrame(event) {
+        delta += event.delta;
+        if (delta > 3) {            
+            delta = 0;
+            var fillColors = getRandomColors();
+            for (var i=0; i<paths.length; i++) {
+                var p = paths[i];
+                p.fillColor = fillColors[p.t4 % fillColors.length];
+            }
+        }
+    }
+
+    var tiles = Tiling.generate({depth: 8}); 
+    var group = draw(tiles);
+
+    var x = window.innerWidth;
+    var y = window.innerHeight;
+
+    project.activeLayer.scale(1120, new Point(0, 0));
+    project.activeLayer.translate(new Point(x/2, y/2));
+
+</script>
+</head>
+<body>
+    <canvas id="myCanvas" width="1920" height="959" resize></canvas>
+</body>
+</html>

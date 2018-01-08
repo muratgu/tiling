@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Load the Paper.js library -->
+<script type="text/javascript" src="paper.js"></script>
+<!-- Define inlined PaperScript associate it with myCanvas -->
+<script type="text/paperscript" canvas="myCanvas">
+    var phi = 1.618;
+    var unit = 10;
+    var red = 'rgb(200, 10, 10, 0.7)';
+    var blue = 'rgb(10, 10, 200, 0.7)';
+    var oranj = 'rgb(150, 0, 100, 0.7)';
+
+    var p1 = new Point(100, 100);
+    var v = new Point(0, 0);
+    v.length = 20;  v.angle = 54;
+    //v.length = 53;
+    var p2 = p1 + v;
+    v.length = 30;  v.angle = -18;
+    //v.length += 53;
+    var p3 = p1 + v;
+    v.length = 40;  v.angle = 9;
+    //v.length += 53;
+    var p4 = p1 + v;
+    var groups = [];    
+    groups.push(decagon(p1, red));
+    groups.push(decagon(p2, red));
+    groups.push(decagon(p3, red));
+    groups.push(decagon(p4, red));    
+    
+    var groupIndex = 0;
+    var stepAngle = 1;
+    function onFrame(event) {
+            groups[groupIndex].rotate(stepAngle, groups[groupIndex].data.origin);
+            groupIndex += 1;
+            if (groupIndex == groups.length) groupIndex = 0;
+            stepAngle = groupIndex;
+            if (stepAngle > 360) stepAngle = 0;
+    }
+
+    function decagon(origin, color) {
+        var vector = new Point(0, 0);
+        vector.length = unit*phi;
+        vector.angle = 0;
+        var offset = new Point(0, 0);
+        offset.length = unit*phi;
+        offset.angle = 108;
+        var pivot = new Point(0, 0);
+        pivot.length = unit*(1+phi);
+        pivot.angle = 72;
+        var path = new Path();
+        path.strokeColor = color;
+        path.moveTo(origin);
+        var paths = [path];        
+        var point = origin;
+        for(var i=0; i<10; i++) {
+            point = point + vector;
+            path.lineTo(point);
+            vector = vector.rotate(36);
+            if (i==0) paths.push(kite(point, 18, red));
+            if (i==0) paths.push(kite(point, 90, red));            
+            if (i==0) paths.push(kite(point+offset, 54, blue));
+            if (i==3) paths.push(kite(point, 126, red));
+            if (i==7) paths.push(kite(point, -18, red));            
+        }
+        var group = new Group(paths);
+        group.data.origin = origin;
+        group.translate(-pivot);
+        return group;
+    }
+
+    function kite(point, angle, color) {
+        var len1 = unit*phi;
+        var len2 = unit;
+
+        var vector = new Point(0, 0);        
+
+        var path = new Path();
+        path.strokeColor = 'rgb(0, 0, 0, 0.0)';
+        path.fillColor = color;
+        path.moveTo(point);
+    
+        vector.angle = 18 + angle;
+        vector.length = len1;
+        point = point + vector;
+        path.lineTo(point);
+
+        vector = vector.rotate(108);
+        vector.length = len2;
+        point = point + vector;
+        path.lineTo(point);
+
+        vector = vector.rotate(36);
+        vector.length = len2;
+        point = point + vector;
+        path.lineTo(point);
+
+        vector = vector.rotate(108);
+        vector.length = len1;
+        point = point + vector;
+        path.lineTo(point);
+        return path;
+    }
+
+</script>
+</head>
+<body>
+    <canvas id="myCanvas" width="1200" height="800" resize></canvas>
+</body>
+</html>
