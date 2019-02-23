@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="paper-full.js"></script>
+<script type="text/javascript">
+    /*
+    Reference: http://preshing.com/20110831/penrose-tiling-explained/
+    */
+    const Tiling = function (lib, opt) {
+        lib = lib || {} 
+        opt = opt || {}
+        const Point = lib.Point
+        const Path = lib.Path
+        const Group = lib.Group
+        if (!Point) throw new Error('Point is not defined')
+        if (!Path) throw new Error('Path is not defined')
+        if (!Group) throw new Error('Group is not defined')
+        
+
+        let _triangles = [] // contains the current generated tirangles
+        let _group = null // contains the current drawn paths
+        
+        
+        // golden ratio
+        const G = (1.0 + Math.sqrt(5)) / 2.0
+
+        const subdivide = function (t) {            
+            const color = t[0], A = t[1], B = t[2], C = t[3]
+            if (color === 0) { // red triangle
+                const P = A.add(B.subtract(A).divide(G))
+                return [[0, C, P, B, 0], [1, P, C, A, 1]]
+            } else { // blue triangle
+                const Q = B.add(A.subtract(B).divide(G))
+                const R = B.add(C.subtract(B).divide(G))
+                return [[1, R, C, A, 2], [1, Q, R, B, 3], [0, R, Q, A, 4]]
+            }
+        }
+
+        const generateSeedSun = function(n){
+            // Create wheel of red triangles around the origin
+            const N = n || 10
+            const P = Math.PI / N
+            const A = new Point(0, 0)
+            return Array.from(Array(N).keys()).map(x => {
+                const phi1 = (2.0*x - 1) * P
+                const phi2 = (2.0*x + 1) * P            
+                const B = new Point(Math.cos(phi1), Math.sin(phi1))
+                const C = new Point(Math.cos(phi2), Math.sin(phi2))
+                return (x % 2 === 0) 
+                    ? [0, A, C, B, 0]
+                    : [0, A, B, C, 0]
+            })
+        }
+        
+        const generate = function(opt) {
+            opt = opt || {}
+            depth = opt.depth || 0
+            _triangles = generateSeedSun() // seed
+            // subdivide the seed 
+            for (let i = 0; i < depth; i++) {                       
+                _triangles = [].concat(..._triangles.map(subdivide))
+            }
+            return _this
+        }
+
+        const makePath = function(t) {
+            var path = new Path()
+            path.moveTo(t[1].x, t[1].y)
+            path.lineTo(t[2].x, t[2].y)
+            path.lineTo(t[3].x, t[3].y)
+            path.closePath()
+            return path
+        }    
+
+        const draw = function (opt) {
+            opt = opt || {}
+            const fillColors = opt.fillColors || ['rgba(150,150,150,0.7)', 'rgba(250,250,250,0.7)']
+            if (_group) _group.removeChildren()
+            _group = new Group()
+            for (let i=0; i<_triangles.length; i++) {
+                const t = _triangles[i]
+                const p = makePath(t)
+                p.t4 = t[4]
+                p.fillColor = fillColors[p.t4 % fillColors.length]
+                _group.addChild(p)
+            }      
+            return _this
+        }
+
+        const setFillColors = function(fillColors) {
+            if (_group && fillColors && fillColors.length) {
+                for (let i=0; i<_group.children.length; i++) {
+                    const p = group.children[i]
+                    p.fillColor = fillColors[p.t4 % fillColors.length]
+                }
+            }
+            return _this
+        }
+
+        const _this = {
+            generate: generate,
+            draw: draw,
+            setFillColors: setFillColors
+        }
+        return _this
+    }
+
+</script>
+
+<script type="text/paperscript" canvas="myCanvas">
+
+    function getRandomColor() {
+        var r = Math.floor(Math.random()*255)
+        var g = Math.floor(Math.random()*255)
+        var b = Math.floor(Math.random()*255)
+        return 'rgba('+r+','+g+','+b+',0.7)'
+    }
+
+    function getRandomColors() {
+        var colors = []
+        var len = Math.floor(Math.random()*4) + 2 // 2 to 5 colors is ideal
+        for (var i=0; i<len; i++) {
+            colors.push(getRandomColor())
+        }
+        return colors
+    }    
+   
+
+    var delta = 0
+    var MAX_DELTA = 3
+    var ITERATE_FOR_DEPTH = 0
+    var ITERATE_FOR_COLOR = 1
+    var iterationKind = ITERATE_FOR_DEPTH
+
+    var iterationDepth = 0
+    var MAX_DEPTH = 10
+    var MIN_DEPTH = 0    
+    
+    var fillColors = getRandomColors()
+    var tiler = Tiling(paper)
+
+    function onFrame(event) {
+        delta += event.delta
+        if (delta > MAX_DELTA) {            
+            delta = 0
+            if (iterationKind == ITERATE_FOR_COLOR) {
+                fillColors = getRandomColors()
+                tiler.setFillColors(fillColors);
+            }
+            if (iterationKind == ITERATE_FOR_DEPTH) {
+                iterationDepth = (iterationDepth + 1) % MAX_DEPTH
+                refresh()
+            }
+        }
+    }
+
+    function refresh() {
+        if (iterationDepth == 0) fillColors = getRandomColors()
+                
+        tiler.generate({ depth: iterationDepth })
+            .draw({ fillColors: fillColors })
+
+        project.activeLayer.scale(820, new Point(0, 0))
+        project.activeLayer.translate(new Point(x/2, y/2))
+    }
+
+    var x = window.innerWidth
+    var y = window.innerHeight
+
+    refresh()
+
+</script>
+</head>
+<body>
+    <canvas id="myCanvas" width="1920" height="959" resize></canvas>
+</body>
+</html>

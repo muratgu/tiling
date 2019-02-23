@@ -55,7 +55,7 @@ var Tiling = (function () {
                 B = C;
                 C = temp;
             }
-            triangles.push([1, A, B, C]);
+            triangles.push([0, A, B, C]);
         }
         return triangles;
     }

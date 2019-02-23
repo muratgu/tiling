@@ -6,13 +6,14 @@
     /*
     Reference: http://preshing.com/20110831/penrose-tiling-explained/
     */
+    var GOLDENRATIO = (1.0 + Math.sqrt(5)) / 2.0;
+
     var Tiling = (function (lib) {
         lib = lib || {};        
         var Point = lib.Point;
         if (!Point) throw new Error('Point is not defined');
 
         var subdivide = function (triangles, depth) {
-            var GOLDENRATIO = (1.0 + Math.sqrt(5)) / 2.0;
             var result = [];
             for (var i = 0; i < triangles.length; i++) {        
                 var t = triangles[i];
@@ -21,12 +22,12 @@
                 if (color === 0) {
                     // Subdivide red triangle
                     var P = A.add(B.subtract(A).divide(GOLDENRATIO));
-                    result.push([0, C, P, B, 0], [1, P, C, A, 1]);
+                    result.push([0, C, P, B, 1], [1, P, C, A, 2]);
                 } else {
                     // Subdivide blue triangle
                     var Q = B.add(A.subtract(B).divide(GOLDENRATIO));
                     var R = B.add(C.subtract(B).divide(GOLDENRATIO));
-                    result.push([1, R, C, A, 2], [1, Q, R, B, 3], [0, R, Q, A, 4]);
+                    result.push([1, R, C, A, 3], [1, Q, R, B, 4], [0, R, Q, A, 5]);
                 }
             }
             return result;
@@ -87,10 +88,10 @@
     }
 
     function getRandomColor() {
-        var r = Math.floor(Math.random()*255);
-        var g = Math.floor(Math.random()*255);
-        var b = Math.floor(Math.random()*255);
-        return 'rgba('+r+','+g+','+b+',0.7)';
+        var r = Math.floor(Math.random()*250);
+        var g = Math.floor(Math.random()*250);
+        var b = Math.floor(Math.random()*250);
+        return 'rgba('+r+','+g+','+b+',0.65)';
     }
 
     function getRandomColors() {
@@ -99,7 +100,6 @@
         for (var i=0; i<len; i++) {
             colors.push(getRandomColor());
         }
-        console.log(colors);
         return colors;
     }    
 
@@ -110,14 +110,29 @@
         path.lineTo(t[3].x, t[3].y);
         path.closePath();
         return path;
-    }    
+    } 
+
+    var makeTriangleWithArcs = function(t) {
+        var path = new Path();
+        path.moveTo(t[1].x, t[1].y);
+        path.lineTo(t[2].x, t[2].y);
+        path.lineTo(t[3].x, t[3].y);
+        path.lineTo(t[1].x, t[1].y);
+        if (t[0] === 1) {
+            var a0 = t[2].add(t[1].subtract(t[2]).divide(GOLDENRATIO));
+            var a1 = t[3].add(t[1].subtract(t[3]).divide(GOLDENRATIO));  
+            path.arcTo(a0, a1);
+            console.log(a0, a1);
+        }
+        return path;
+    } 
 
     var draw = function (triangles) {
         var group = new Group();
         paths = [];
         for (var i=0; i<triangles.length; i++) {
             var t = triangles[i];
-            var p = makeTriangle(t);
+            var p = makeTriangleWithArcs(t);
             p.t4 = t[4];
             p.fillColor = fillColors[p.t4 % fillColors.length];
             paths.push(p);
@@ -130,9 +145,9 @@
     var MAX_DELTA = 3;
     var ITERATE_FOR_DEPTH = 0;
     var ITERATE_FOR_COLOR = 1;
-    var iterationKind = ITERATE_FOR_DEPTH;
+    var iterationKind = ITERATE_FOR_COLOR;
 
-    var iterationDepth = 0;
+    var iterationDepth = 1;
     var MAX_DEPTH = 10;
     var MIN_DEPTH = 0;
 
@@ -162,7 +177,7 @@
         if (iterationDepth == 0) fillColors = getRandomColors();
         if (group) group.removeChildren();
         group = draw(Tiling.generate({depth: iterationDepth}));
-        project.activeLayer.scale(820, new Point(0, 0));
+        project.activeLayer.scale(520, new Point(0, 0));
         project.activeLayer.translate(new Point(x/2, y/2));
     }
 

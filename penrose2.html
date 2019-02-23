@@ -7,7 +7,8 @@
     Reference: http://preshing.com/20110831/penrose-tiling-explained/
     */
     var Tiling = (function (lib) {
-        lib = lib || {};        
+        lib = lib || {};
+        
         var Point = lib.Point;
         if (!Point) throw new Error('Point is not defined');
 
@@ -20,13 +21,13 @@
                 // color0, A1, B2, C3 
                 if (color === 0) {
                     // Subdivide red triangle
-                    var P = A.add(B.subtract(A).divide(GOLDENRATIO));
+                    var P = C.add(B.subtract(C).divide(GOLDENRATIO));
                     result.push([0, C, P, B, 0], [1, P, C, A, 1]);
                 } else {
                     // Subdivide blue triangle
                     var Q = B.add(A.subtract(B).divide(GOLDENRATIO));
-                    var R = B.add(C.subtract(B).divide(GOLDENRATIO));
-                    result.push([1, R, C, A, 2], [1, Q, R, B, 3], [0, R, Q, A, 4]);
+                    var R = A.add(C.subtract(A).divide(GOLDENRATIO));
+                    result.push([1, B, C, R, 2], [1, B, Q, R, 3], [0, Q, R, A, 4]);
                 }
             }
             return result;
@@ -47,14 +48,14 @@
                     B = C;
                     C = temp;
                 }
-                triangles.push([0, A, B, C, 0]);
+                triangles.push([1, A, B, C]);
             }
             return triangles;
         }
         
         var generate = function(options) {
             options = options || {};
-            depth = options.depth || 0;
+            depth = options.depth || 8;
             // Create a seed
             var triangles = generateSeedSun();
             // Perform subdivisions
@@ -110,9 +111,11 @@
         path.lineTo(t[3].x, t[3].y);
         path.closePath();
         return path;
-    }    
+    }
 
+    var paths = [];
     var draw = function (triangles) {
+        var fillColors = getRandomColors();
         var group = new Group();
         paths = [];
         for (var i=0; i<triangles.length; i++) {
@@ -127,49 +130,26 @@
     }
 
     var delta = 0;
-    var MAX_DELTA = 3;
-    var ITERATE_FOR_DEPTH = 0;
-    var ITERATE_FOR_COLOR = 1;
-    var iterationKind = ITERATE_FOR_DEPTH;
-
-    var iterationDepth = 0;
-    var MAX_DEPTH = 10;
-    var MIN_DEPTH = 0;
-
-    var group;
-    var paths = [];
-    var fillColors = getRandomColors();
-
     function onFrame(event) {
         delta += event.delta;
-        if (delta > MAX_DELTA) {            
+        if (delta > 3) {            
             delta = 0;
-            if (iterationKind == ITERATE_FOR_COLOR) {
-                fillColors = getRandomColors();
-                for (var i=0; i<paths.length; i++) {
-                    var p = paths[i];
-                    p.fillColor = fillColors[p.t4 % fillColors.length];
-                }
-            }
-            if (iterationKind == ITERATE_FOR_DEPTH) {
-                iterationDepth = (iterationDepth + 1) % MAX_DEPTH;
-                refresh();
+            var fillColors = getRandomColors();
+            for (var i=0; i<paths.length; i++) {
+                var p = paths[i];
+                p.fillColor = fillColors[p.t4 % fillColors.length];
             }
         }
     }
 
-    function refresh() {
-        if (iterationDepth == 0) fillColors = getRandomColors();
-        if (group) group.removeChildren();
-        group = draw(Tiling.generate({depth: iterationDepth}));
-        project.activeLayer.scale(820, new Point(0, 0));
-        project.activeLayer.translate(new Point(x/2, y/2));
-    }
+    var tiles = Tiling.generate({depth: 8}); 
+    var group = draw(tiles);
 
     var x = window.innerWidth;
     var y = window.innerHeight;
 
-    refresh();
+    project.activeLayer.scale(1120, new Point(0, 0));
+    project.activeLayer.translate(new Point(x/2, y/2));
 
 </script>
 </head>
