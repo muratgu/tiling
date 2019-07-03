@@ -6,237 +6,116 @@
 
     var SIZE = 20;
 
-    var generateSet = function(x,y) {
-        var set = [];
-        set.push(generate(x,y,0));
+    var line = function (x1, y1, x2, y2, style) {
+        var p = new Path.Line({
+            from: new Point(x1, y1),
+            to: new Point(x2, y2),
+        })
+        if (style === '-') p.dashArray = [3, 1];
+        return p;
     }
 
-    var curve = function(points, size, scale) {
+    var arc = function(x1, y1, x2, y2, x3, y3) {
+        return new Path.Arc({
+            from: new Point(x1, y1),
+            through: new Point(x2, y2), 
+            to: new Point(x3, y3),
+        });
+    }
+
+    var curve = function(points) {
         var p = new Path({
             segments: points,
-            scaling: scale ? scale : size+2,
-            position: new Point(-size/2, -size/2)
         });
         p.smooth({type: 'catmull-rom'});
         return p;
     }
 
-    var generateSet = function(x, y) {        
-        return {
-            1: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y),
-                        through: new Point(x-SIZE/2-2, y-SIZE), 
-                        to: new Point(x-SIZE, y-SIZE),
-                    }),
-                ],
-            }),
-            2: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y-SIZE),
-                        through: new Point(x-2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y),
-                    }),
-                ],
-            }),
-            3: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE, y-SIZE),
-                        through: new Point(x-SIZE/2+2, y), 
-                        to: new Point(x, y),
-                    }),
-                ],
-            }),
-            4: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE, y),
-                        through: new Point(x-SIZE/2+2, y-SIZE), 
-                        to: new Point(x, y-SIZE),
-                    }),
-                ],
-            }),
-            5: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE/2, y),
-                        through: new Point(x-SIZE/4, y-SIZE/2), 
-                        to: new Point(x-SIZE/2, y-SIZE),
-                    }),
-                ],
-            }),
-            6: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y-SIZE/2),
-                        through: new Point(x-SIZE/2, y-SIZE/4), 
-                        to: new Point(x-SIZE, y-SIZE/2),
-                    }),
-                ],
-            }),
-            7: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE/2, y),
-                        through: new Point(x-SIZE/4-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE/2, y-SIZE),
-                    }),
-                ],
-            }),
-            8: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE, y-SIZE/2),
-                        through: new Point(x-SIZE/2, y-SIZE/4-SIZE/2), 
-                        to: new Point(x, y-SIZE/2),
-                    }),
-                ],
-            }),
-            9: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE/2, y-SIZE),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE/2, y),
-                    }),
-                ],
-            }),
-            10: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y-SIZE/2),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y-SIZE/2),
-                    }),
-                ],
-            }),
-            11: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y-SIZE),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y)
-                    }),
-                ],
-            }),
-            12: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y-SIZE)
-                    }),
-                ],
-            }),
-            13: new CompoundPath({
-                children: [
-                    curve([
-                        [0.5, 0],
-                        [0.52, 0.07],
-                        [0.56, 0.3],
-                        [0.44, 0.65],
-                        [0.48, 0.91],
-                        [0.5, 1.0]
-                    ], SIZE),
-                ],
-            }),
-            14: new CompoundPath({
-                children: [
-                    curve([
-                        [0, 0.5],
-                        [0.07, 0.51],
-                        [0.3, 0.65],
-                        [0.38, 0.65],
-                        [0.7, 0.57],
-                        [0.75, 0.54],
-                        [0.9, 0.5],
-                        [1.0, 0.5]
-                    ], SIZE),
-                ],
-            }),
-            15: new CompoundPath({
-                children: [
-                    curve([
-                        [0, 1],
-                        [0.11, 0.94],
-                        [0.2, 0.7],
-                        [0.25, 0.6],
-                        [0.43, 0.32],
-                        [0.9, 0.1],
-                        [1.0, 0.0]
-                    ], SIZE, SIZE),
-                ],
-            }),
-            16: new CompoundPath({
-                children: [
-                    curve([
-                        [0, 0],
-                        [0.05, 0.04],
-                        [0.08, 0.08],
-                        [0.25, 0.18],
-                        [0.32, 0.25],
-                        [0.4, 0.39],
-                        [0.5, 0.505],
-                        [0.64, 0.74],
-                        [0.73, 0.83],
-                        [0.95, 0.95],
-                        [1.0, 1.0]
-                    ], SIZE, SIZE),
-                ],
-            }),            
-            17: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x-SIZE/2, y-SIZE),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE/2, y)
-                    }),
-                ],
-                dashArray: [3, 1],
-            }),
-            18: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y-SIZE/2),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y-SIZE/2)
-                    }),
-                ],
-                dashArray: [3, 1],
-            }),
-            19: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y-SIZE),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y)
-                    }),
-                ],
-                dashArray: [3, 1],
-            }),
-            20: new CompoundPath({
-                children: [
-                    new Path.Arc({
-                        from: new Point(x, y),
-                        through: new Point(x-SIZE/2, y-SIZE/2), 
-                        to: new Point(x-SIZE, y-SIZE)
-                    }),
-                ],
-                dashArray: [3, 1],
-            }),
-        }
+    var createSet = function() {        
+        return [
+            arc( 1,  1, .45,   0,  0,  0),
+            arc( 1,  0, .95,  .5,  0,  1),
+            arc( 0,  0,  .5, .95,  1,  1),
+            arc( 0,  1, .45,   0,  1,  0),
+            arc(.5,  1, .75,  .5, .5,  0),
+            arc( 1, .5,  .5, .75,  0, .5),            
+            arc(.5,  1, .25,  .5, .5,  0),
+            arc( 0, .5,  .5, .25,  1, .5),
+            line(.5,  0, .5,  1),
+            line( 0, .5,  1, .5),
+            line( 0,  1,  1,  0),
+            line( 0,  0,  1,  1),
+            curve([
+                [0.5, 0],
+                [0.52, 0.07],
+                [0.56, 0.3],
+                [0.44, 0.65],
+                [0.48, 0.91],
+                [0.5, 1.0]
+            ]),
+            curve([
+                [0, 0.5],
+                [0.07, 0.51],
+                [0.3, 0.65],
+                [0.38, 0.65],
+                [0.7, 0.57],
+                [0.75, 0.54],
+                [0.9, 0.5],
+                [1.0, 0.5]
+            ]),
+            curve([
+                [0, 1],
+                [0.11, 0.94],
+                [0.2, 0.7],
+                [0.25, 0.6],
+                [0.43, 0.32],
+                [0.9, 0.1],
+                [1.0, 0.0]
+            ]),
+            curve([
+                [0, 0],
+                [0.05, 0.04],
+                [0.08, 0.08],
+                [0.25, 0.18],
+                [0.32, 0.25],
+                [0.4, 0.39],
+                [0.5, 0.505],
+                [0.64, 0.74],
+                [0.73, 0.83],
+                [0.95, 0.95],
+                [1.0, 1.0]
+            ]),
+            line(.5,  0, .5,  1, '-'),
+            line( 0, .5,  1, .5, '-'),
+            line( 0,  1,  1,  0, '-'),
+            line( 0,  0,  1,  1, '-')
+        ]
     }    
+
+    var generateFrom = function (set, n) {
+        var g = [];
+        var k = 0;
+        for(i=0;i<n;i++){
+            g.push(set[k]);
+            k+=1;
+            if (k >= set.length) k = 0;
+            g.push(set[k]);
+            k+=1;
+            if (k >= set.length) k = 0;
+        }
+        return g;
+    }
 
     var draw = function (set) {
         var group = new Group();
-        for (var i in set) {
+        var n = 0
+        for (var i in set) {            
             var s = set[i];
-            s.translate(i*SIZE, 0);
-            s.strokeColor = 'red';
+            s.scale(SIZE);
+            if (n%2==0) s.translate(n/2*SIZE, 0);
+            s.strokeColor = '#616445';
             group.addChild(s);
+            n += 1
         }      
         return group;
     }
@@ -247,8 +126,8 @@
 
     function refresh() {
         console.log('refresh');
-        var set = generateSet(0, 0);
-        group = draw(set);
+        var set = createSet(0, 0);
+        var group = draw(generateFrom(set, 10));
         //project.activeLayer.scale(1, new Point(0, 0));
         project.activeLayer.translate(new Point(x/2, y/2));
     }
