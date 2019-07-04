@@ -93,12 +93,11 @@
         }
     }  
 
+    var group;
     var draw = function (generator, n, w, h, k) {
-        var x = 0
-        var y = 0
-        var a = 0
-        var b = 0 
-        var group = new Group();        
+        var x = 0, y = 0, a = 0, b = 0 
+        if (group) group.removeChildren();
+        group = new Group();        
         for (var i=0; i<w*h; i++) {                                    
             b += k
             if (b>=n) { a+=1; if (a>=n) a=0; b=a+k }            
@@ -115,21 +114,31 @@
             x += 1
             if (x>=w) { x=0; y+=1 }
         }
-        return group;
     }
 
+    var delta = 0;
     function onFrame(event) {
-        //refresh();
+        delta += event.delta;
+        if (delta > 3) {            
+            delta = 0;
+            refresh();
+        }
+    }
+
+    function pickOne(arr) {
+        var i = Math.floor(Math.random()*arr.length);
+        return arr[i];
     }
 
     function refresh() {
-        console.log('refresh');
-        var group = draw(generator, 20, 7, 7, 9);
+        var r = pickOne([1, 2, 3, 6, 8, 9, 10, 12, 14])
+        console.log(r)
+        draw(generator, 20, 83, 37, r);
         project.activeLayer.translate(new Point(SIZE, SIZE));
     }
 
-    var x = window.innerWidth;
-    var y = window.innerHeight;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
 
     refresh();
 
