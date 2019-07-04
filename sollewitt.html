@@ -31,29 +31,30 @@
         return p;
     }
 
-    var createSet = function() {        
-        return [
-            arc( 1,  1, .45,   0,  0,  0),
-            arc( 1,  0, .95,  .5,  0,  1),
-            arc( 0,  0,  .5, .95,  1,  1),
-            arc( 0,  1, .45,   0,  1,  0),
-            arc(.5,  1, .75,  .5, .5,  0),
-            arc( 1, .5,  .5, .75,  0, .5),            
-            arc(.5,  1, .25,  .5, .5,  0),
-            arc( 0, .5,  .5, .25,  1, .5),
-            line(.5,  0, .5,  1),
-            line( 0, .5,  1, .5),
-            line( 0,  1,  1,  0),
-            line( 0,  0,  1,  1),
-            curve([
+    var generator = function(k) { 
+        k = k % 20;       
+        switch(k) {
+        case 0: return arc( 1,  1, .45,   0,  0,  0)
+        case 1: return arc( 1,  0, .95,  .5,  0,  1)
+        case 2: return arc( 0,  0,  .5, .95,  1,  1)
+        case 3: return arc( 0,  1, .45,   0,  1,  0)
+        case 4: return arc(.5,  1, .75,  .5, .5,  0)
+        case 5: return arc( 1, .5,  .5, .75,  0, .5)            
+        case 6: return arc(.5,  1, .25,  .5, .5,  0)
+        case 7: return arc( 0, .5,  .5, .25,  1, .5)
+        case 8: return line(.5,  0, .5,  1)
+        case 9: return line( 0, .5,  1, .5)
+        case 10: return line( 0,  1,  1,  0)
+        case 11: return line( 0,  0,  1,  1)
+        case 12: return curve([
                 [0.5, 0],
                 [0.52, 0.07],
                 [0.56, 0.3],
                 [0.44, 0.65],
                 [0.48, 0.91],
                 [0.5, 1.0]
-            ]),
-            curve([
+                ])
+        case 13: return curve([
                 [0, 0.5],
                 [0.07, 0.51],
                 [0.3, 0.65],
@@ -62,8 +63,8 @@
                 [0.75, 0.54],
                 [0.9, 0.5],
                 [1.0, 0.5]
-            ]),
-            curve([
+                ])
+        case 14: return curve([
                 [0, 1],
                 [0.11, 0.94],
                 [0.2, 0.7],
@@ -71,8 +72,8 @@
                 [0.43, 0.32],
                 [0.9, 0.1],
                 [1.0, 0.0]
-            ]),
-            curve([
+                ])
+        case 15: return curve([
                 [0, 0],
                 [0.05, 0.04],
                 [0.08, 0.08],
@@ -84,39 +85,36 @@
                 [0.73, 0.83],
                 [0.95, 0.95],
                 [1.0, 1.0]
-            ]),
-            line(.5,  0, .5,  1, '-'),
-            line( 0, .5,  1, .5, '-'),
-            line( 0,  1,  1,  0, '-'),
-            line( 0,  0,  1,  1, '-')
-        ]
-    }    
-
-    var generateFrom = function (set, n) {
-        var g = [];
-        var k = 0;
-        for(i=0;i<n;i++){
-            g.push(set[k]);
-            k+=1;
-            if (k >= set.length) k = 0;
-            g.push(set[k]);
-            k+=1;
-            if (k >= set.length) k = 0;
+                ])
+        case 16: return line(.5,  0, .5,  1, '-')
+        case 17: return line( 0, .5,  1, .5, '-')
+        case 18: return line( 0,  1,  1,  0, '-')
+        case 19: return line( 0,  0,  1,  1, '-')
         }
-        return g;
-    }
+    }  
 
-    var draw = function (set) {
-        var group = new Group();
-        var n = 0
-        for (var i in set) {            
-            var s = set[i];
+    var draw = function (generator, n, w, h, k) {
+        var x = 0
+        var y = 0
+        var a = 0
+        var b = 0 
+        var group = new Group();        
+        for (var i=0; i<w*h; i++) {                                    
+            b += k
+            if (b>=n) { a+=1; if (a>=n) a=0; b=a+k }            
+            var s = generator(a);
             s.scale(SIZE);
-            if (n%2==0) s.translate(n/2*SIZE, 0);
-            s.strokeColor = '#616445';
-            group.addChild(s);
-            n += 1
-        }      
+            s.translate(x*SIZE, y*SIZE);
+            s.strokeColor = '#6164ff';
+            group.addChild(s);            
+            s = generator(b);
+            s.scale(SIZE);
+            s.translate(x*SIZE, y*SIZE);
+            s.strokeColor = '#6164ff';
+            group.addChild(s);            
+            x += 1
+            if (x>=w) { x=0; y+=1 }
+        }
         return group;
     }
 
@@ -126,10 +124,8 @@
 
     function refresh() {
         console.log('refresh');
-        var set = createSet(0, 0);
-        var group = draw(generateFrom(set, 10));
-        //project.activeLayer.scale(1, new Point(0, 0));
-        project.activeLayer.translate(new Point(x/2, y/2));
+        var group = draw(generator, 20, 7, 7, 9);
+        project.activeLayer.translate(new Point(SIZE, SIZE));
     }
 
     var x = window.innerWidth;
