@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="paper.js"></script>
+<script type="text/javascript">
+    /*
+    Reference: http://preshing.com/20110831/penrose-tiling-explained/
+    */
+    var GOLDENRATIO = (1.0 + Math.sqrt(5)) / 2.0;
+    var Tiling = (function (lib) {
+        lib = lib || {};        
+        var Point = lib.Point;
+        if (!Point) throw new Error('Point is not defined');
+
+        var subdivide1 = function (triangles, depth) {
+            var result = [];
+            for (var i = 0; i < triangles.length; i++) {        
+                var t = triangles[i];
+                var color = t[0], A = t[1], B = t[2], C = t[3]
+                // color0, A1, B2, C3 
+                if (color === 0) {
+                    // Subdivide red triangle (thin rhombus)
+                    var P = A.add(B.subtract(A).divide(GOLDENRATIO));
+                    result.push([0, C, P, B], [1, P, C, A]);
+                } else {
+                    // Subdivide blue triangle (fat rhombus)
+                    var Q = B.add(A.subtract(B).divide(GOLDENRATIO));
+                    var R = B.add(C.subtract(B).divide(GOLDENRATIO));
+                    result.push([1, R, C, A], [1, Q, R, B], [0, R, Q, A]);
+                }
+            }
+            return result;
+        } 
+
+        var subdivide2 = function (triangles, depth) {
+            var result = [];
+            for (var i = 0; i < triangles.length; i++) {        
+                var t = triangles[i];
+                var color = t[0], A = t[1], B = t[2], C = t[3]
+                // color0, A1, B2, C3 
+                if (color === 0) {
+                    // Subdivide red triangle (half kite)
+                    var Q = A.add(B.subtract(A).divide(GOLDENRATIO));
+                    var R = B.add(C.subtract(B).divide(GOLDENRATIO));
+                    result.push([1, R, Q, B], [0, Q, A, R], [0, C, A, R]);
+                } else {
+                    // Subdivide blue triangle (half dart)
+                    var P = C.add(A.subtract(C).divide(GOLDENRATIO));
+                    result.push([1, B, P, A], [0, P, C, B]);
+                }
+            }
+            return result;
+        } 
+
+        var generateSeedSun = function(options){
+            options = options || {};
+            kind = options.kind || 1;
+            // Create wheel of red triangles around the origin
+            var triangles = []
+            for (var i = 0; i < 10; i++) {
+                var A = new Point(0, 0);
+                var phi1 = (2.0*i - 1) * Math.PI / 10.0;
+                var B = new Point(Math.cos(phi1), Math.sin(phi1));
+                phi2 = (2.0*i + 1) * Math.PI / 10.0;
+                var C = new Point(Math.cos(phi2), Math.sin(phi2));
+                if (i % 2 === 0) {
+                    var temp = B;
+                    B = C;
+                    C = temp;
+                }
+                if (kind == 1) {
+                    triangles.push([0, A, B, C]);
+                } else {
+                    triangles.push([0, B, A, C]);
+                }
+                    
+            }
+            return triangles;
+        }
+        
+        var generate = function(options) {
+            options = options || {};
+            depth = options.depth || 0;
+            kind = options.kind || 1;
+            // Create a seed
+            var triangles = generateSeedSun(options);
+            // Perform subdivisions
+            for (var i = 0; i < depth; i++) {
+                if (kind == 1) {
+                    triangles = subdivide1(triangles, i);        
+                } else {
+                    triangles = subdivide2(triangles, i);        
+                }
+            }
+            return triangles;
+        }      
+        
+
+      return {
+        generate: generate
+      };
+
+    })({Point: paper.Point});
+
+</script>
+
+<script type="text/paperscript" canvas="myCanvas">
+
+    function shuffle(arr) {
+        var j, x, i;
+        var len = arr.length;
+        for (i = len - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            x = arr[i];
+            arr[i] = arr[j];
+            arr[j] = x;
+        }
+    }
+
+    function getRandomColor() {
+        var r = Math.floor(Math.random()*255);
+        var g = Math.floor(Math.random()*255);
+        var b = Math.floor(Math.random()*255);
+        return 'rgba('+r+','+g+','+b+',0.7)';
+    }
+
+    function getRandomColors() {
+        var colors = [];
+        var len = 2;
+        for (var i=0; i<len; i++) {
+            colors.push(getRandomColor());
+        }
+        return colors;
+    }    
+
+    var makeTriangle = function(t) {
+        var path = new Path();
+        path.moveTo(t[1].x, t[1].y);
+        path.lineTo(t[2].x, t[2].y);
+        path.lineTo(t[3].x, t[3].y);
+        path.closePath();
+        return path;
+    }    
+
+    var draw = function (triangles) {
+        for (var i=0; i<triangles.length; i++) {
+            var t = triangles[i];
+            var p = makeTriangle(t);
+            var c = t[0];
+            p.strokeColor = fillColors[c % fillColors.length];
+            p.strokeWidth = 0.5;
+            p.fillColor = fillColors[c % fillColors.length];
+        }      
+    }
+
+    var delta = 0;
+    var MAX_DELTA = 3;
+    var ITERATE_FOR_DEPTH = 0;
+    var ITERATE_FOR_COLOR = 1;
+    var iterationKind = ITERATE_FOR_DEPTH;
+
+    var iterationDepth = 7;
+    var MAX_DEPTH = 10;
+    var MIN_DEPTH = 0;
+
+    var fillColors = getRandomColors();
+
+    function onFrame(event) {
+        // do nothing
+    }
+
+    function refresh() {
+        project.activeLayer.removeChildren();
+        draw(Tiling.generate({depth: iterationDepth, kind: 2}));
+        project.activeLayer.scale(x*GOLDENRATIO, new Point(0, 0));
+        project.activeLayer.translate(new Point(x, y));
+    }
+
+    var center = view.size/2;
+    var x = center.width;
+    var y = center.height;
+
+    refresh();
+    
+    document.getElementById("download-to-svg").onclick = function(){
+        var fileName = "penrose5-export.svg"
+        var url = "data:image/svg+xml;utf8," + encodeURIComponent(paper.project.exportSVG({asString:true}));
+        var link = document.createElement("a");
+        link.download = fileName;
+        link.href = url;
+        link.click();
+    }
+
+</script>
+</head>
+<body>
+    <canvas id="myCanvas" width="900" height="900" resize></canvas>
+    <br />
+    <button id="download-to-svg">Export SVG</button>
+</body>
+</html>
